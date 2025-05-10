@@ -142,31 +142,8 @@ export function RebuildChart({packages, architecture}: RebuildChartProperties) {
     const theme = useTheme();
 
     return (
-        <Grid id="this one">
-            <Box sx={{ flexGrow: 1 }}>
-                <LineChart
-                    xAxis={[{
-                        id: "Date",
-                        scaleType: "time",
-                        data: seriesData.xAxis,
-                        min: seriesData.xAxis[0],
-                        max: seriesData.xAxis[-1],
-                        valueFormatter: (date) => `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`
-                    }]}
-                    yAxis={[
-                        {
-                            width: 70,
-                        },
-                    ]}
-                    series={[
-                        { type: "line", data: seriesData.goodSeries, label: "GOOD", stack: "total", area: true, showMark: false, color: theme.palette.success.dark },
-                        { type: "line", data: seriesData.badSeries, label: "BAD", stack: "total", area: true, showMark: false, color: theme.palette.error.dark },
-                        { type: "line", data: seriesData.unknownSeries, label: "UNKWN", stack: "total", area: true, showMark: false, color: theme.palette.warning.dark }
-                    ]}
-                    loading={packages === null}
-                />
-            </Box>
-            <Grid container direction="row" spacing={6} columns={3}>
+        <Grid container direction="column" size="grow">
+            <Grid container size="auto" direction="row" spacing={6} columns={3}>
                 <Select
                     labelId="chart-granularity-select-label"
                     id="chart-granularity-select"
@@ -180,6 +157,31 @@ export function RebuildChart({packages, architecture}: RebuildChartProperties) {
                 </Select>
                 <DateTimePicker label="Start" />
                 <DateTimePicker label="End" />
+            </Grid>
+            <Grid size="grow">
+                <Box display="flex" alignItems="stretch" width="100%" height="100%">
+                    <LineChart
+                        xAxis={[{
+                            id: "Date",
+                            scaleType: "time",
+                            data: seriesData.xAxis,
+                            min: seriesData.xAxis[0],
+                            max: seriesData.xAxis[-1],
+                            valueFormatter: (date) => `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`
+                        }]}
+                        yAxis={[
+                            {
+                                width: 70,
+                            },
+                        ]}
+                        series={[
+                            { type: "line", data: seriesData.goodSeries, label: "GOOD", stack: "total", area: true, showMark: false, color: theme.palette.success.dark },
+                            { type: "line", data: seriesData.badSeries, label: "BAD", stack: "total", area: true, showMark: false, color: theme.palette.error.dark },
+                            { type: "line", data: seriesData.unknownSeries, label: "UNKWN", stack: "total", area: true, showMark: false, color: theme.palette.warning.dark }
+                        ]}
+                        loading={packages === null}
+                    />
+                </Box>
             </Grid>
         </Grid>
     );

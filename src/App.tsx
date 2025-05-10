@@ -37,12 +37,14 @@ function App() {
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <ThemeProvider theme={theme}>
                 <CssBaseline/>
-                <Grid container size="grow" spacing={5} padding={3}>
-                    <Grid size="grow">
+                <Grid container columns={2} spacing={6} padding={3}>
+                    <Grid container size="grow" paddingBottom={6}>
                         <RebuildChart api={api} packages={packages} />
                     </Grid>
-                    <Grid size="grow" height="100vh" paddingBottom={6}>
-                        <PackageTable api={api} packages={packages}/>
+                    <Grid container size="grow">
+                        <Box height="100vh" width="100%" paddingBottom={6}>
+                            <PackageTable api={api} packages={packages} />
+                        </Box>
                     </Grid>
                 </Grid>
             </ThemeProvider>
