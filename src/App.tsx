@@ -10,6 +10,12 @@ import * as config from "./config/config.json";
 import {RebuildChart} from "./RebuildChart.tsx";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import Divider from "@mui/material/Divider";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelCircleIcon from "@mui/icons-material/Cancel";
+import PendingCircleIcon from "@mui/icons-material/Pending";
+import {DashboardState} from "./api/RebuilderdAPI.ts";
+import {ActiveBuildsTable} from "./ActiveBuildsTable.tsx";
 
 const theme = createTheme({
     colorSchemes: {
@@ -35,6 +41,15 @@ function determineLocale(): string {
     // Old standard.
     return navigator.language ?? "en-US";
 }
+
+function formatPercentage(count: number | undefined, total: number | undefined): string {
+    if (count === undefined || total === undefined) {
+        return "An unknown number";
+    }
+
+    return (count / total).toLocaleString(undefined, { style: "percent", minimumFractionDigits: 2 });
+}
+
 function App() {
     const api = useMemo(() => {
         return new RebuilderdAPI(new URL(config.rebuilderd_host));
@@ -53,16 +68,72 @@ function App() {
 
     useEffect(fetchPackagesContinuously, [fetchPackagesContinuously]);
 
+    const [dashboardState, setDashboardState] = useState<DashboardState | null>(null);
+    const fetchDashboardStateContinuously = useCallback(function fetchDashboardState() {
+        api.getDashboardState().then(d => {
+            setDashboardState(d);
+        }).catch(() => {
+            // TODO: do something with the error
+        });
+
+        setTimeout(fetchDashboardState, 60000);
+    }, [api]);
+
+    useEffect(fetchDashboardStateContinuously, [fetchDashboardStateContinuously]);
+
+    const goodPackageCount = dashboardState?.suites.get("main")!.good;
+    const badPackageCount = dashboardState?.suites.get("main")!.bad;
+    const unknownPackageCount = dashboardState?.suites.get("main")!.unknown;
+
+    const totalPackages = dashboardState === null
+        ? undefined
+        : goodPackageCount! + badPackageCount! + unknownPackageCount!;
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={determineLocale().toLowerCase()}>
             <ThemeProvider theme={theme}>
                 <CssBaseline/>
                 <Grid container columns={2} spacing={6} padding={3}>
-                    <Grid container size="grow" paddingBottom={6} direction="column" spacing={1}>
+                    <Grid container size="grow" paddingBottom={6} direction="column" spacing={2}>
+                        <Grid size="grow" direction="column" spacing={0}>
+                            <h1>Rebuilder statistics for debian/bookworm amd64</h1>
+                            <h2>
+                                Success rate breakdown
+                                <Divider orientation="horizontal"/>
+                            </h2>
+                            <p>
+                                <span style={{ display: "flex", alignItems: "center" }}>
+                                    <CheckCircleIcon color="success" style={{ marginRight: 6 }}/><span>{formatPercentage(goodPackageCount, totalPackages)} of all packages have been bit-for-bit reproduced</span>
+                                </span>
+                                <span style={{ display: "flex", alignItems: "center" }}>
+                                    <CancelCircleIcon color="error" style={{ marginRight: 6 }}/><span>{formatPercentage(badPackageCount, packages?.length)} of all packages have been attempted but failed</span>
+                                </span>
+                                <span style={{ display: "flex", alignItems: "center" }}>
+                                    <PendingCircleIcon color="info" style={{ marginRight: 6 }}/><span>{formatPercentage(unknownPackageCount, packages?.length)} of all packages haven't been attempted yet</span>
+                                </span>
+                            </p>
+                            <h2>
+                                Queue
+                                <Divider orientation="horizontal"/>
+                            </h2>
+                            <p>
+                                {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working hard on the following packages.
+                            </p>
+                            <p>
+                                <Grid container size="grow">
+                                    <Box maxHeight={300} width="100%">
+                                        <ActiveBuildsTable dashboardState={dashboardState} />
+                                    </Box>
+                                </Grid>
+                            </p>
+                        </Grid>
+                        <Grid size="auto">
+                            <Divider orientation="horizontal" />
+                        </Grid>
                         <RebuildChart api={api} packages={packages} />
                     </Grid>
                     <Grid container size="grow">
-                        <Box height="100vh" width="100%" paddingBottom={6}>
+                        <Box maxHeight="100vh" width="100%" paddingBottom={6}>
                             <PackageTable api={api} packages={packages} />
                         </Box>
                     </Grid>

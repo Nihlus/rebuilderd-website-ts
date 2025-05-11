@@ -1,10 +1,13 @@
 import RebuilderdAPI, {PackageRelease} from "./api/RebuilderdAPI.ts";
-import {type ChartsAxisData, LineChart} from "@mui/x-charts";
+import {LineChart} from "@mui/x-charts/LineChart";
 import {useTheme} from "@mui/material/styles";
 import {useMemo, useState} from "react";
-import {Box, Grid, MenuItem, Select} from "@mui/material";
+import Box from "@mui/material/Box";
 import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 import dayjs from "dayjs";
+import Grid from "@mui/material/Grid";
+import Select from "@mui/material/Select";
+import {MenuItem} from "@mui/material";
 
 interface RebuildChartProperties {
     api: RebuilderdAPI;
@@ -171,29 +174,10 @@ export function RebuildChart({packages, architecture}: RebuildChartProperties) {
     const [start, setStart] = useState<Date | undefined>(undefined);
     const [end, setEnd] = useState<Date | undefined>(undefined);
     const seriesData = useMemo(() => createDataSeries(packages, granularity, end, start), [end, granularity, packages, start]);
-    const [axisData, setAxisData] = useState<ChartsAxisData | null>();
     const theme = useTheme();
 
     return (
         <Grid container direction="column" size="grow">
-            <Grid container size="auto" direction="row" spacing={2} columns={3}>
-                <Box minWidth={200}>
-                    <Select
-                        labelId="chart-granularity-select-label"
-                        id="chart-granularity-select"
-                        label="Granularity"
-                        value={granularity} onChange={g => setGranularity(g.target.value as ChartGranularity)}
-                        fullWidth={true}
-                    >
-                        <MenuItem value="Auto">Auto</MenuItem>
-                        <MenuItem value="Month">Month</MenuItem>
-                        <MenuItem value="Day">Day</MenuItem>
-                        <MenuItem value="Hour">Hour</MenuItem>
-                    </Select>
-                </Box>
-                <DateTimePicker label="Start" value={dayjs(start ?? seriesData.xAxis[0])} onChange={v => setStart(v?.toDate())} ampm={false} />
-                <DateTimePicker label="End" value={dayjs(end)} onChange={v => setEnd(v?.toDate() ?? new Date())} ampm={false} />
-            </Grid>
             <Grid size="grow">
                 <Box display="flex" alignItems="stretch" width="100%" height="100%">
                     <LineChart
@@ -216,9 +200,26 @@ export function RebuildChart({packages, architecture}: RebuildChartProperties) {
                             { id: "UNKWN", type: "line", data: seriesData.unknownSeries, label: "UNKWN", stack: "total", area: true, showMark: false, color: theme.palette.warning.dark }
                         ]}
                         loading={packages === null}
-                        onAxisClick={(_, d) => setAxisData(d)}
                     />
                 </Box>
+            </Grid>
+            <Grid container size="auto" direction="row" spacing={2} columns={3}>
+                <Box minWidth={200}>
+                    <Select
+                        labelId="chart-granularity-select-label"
+                        id="chart-granularity-select"
+                        label="Granularity"
+                        value={granularity} onChange={g => setGranularity(g.target.value as ChartGranularity)}
+                        fullWidth={true}
+                    >
+                        <MenuItem value="Auto">Auto</MenuItem>
+                        <MenuItem value="Month">Month</MenuItem>
+                        <MenuItem value="Day">Day</MenuItem>
+                        <MenuItem value="Hour">Hour</MenuItem>
+                    </Select>
+                </Box>
+                <DateTimePicker label="Start" value={dayjs(start ?? seriesData.xAxis[0])} onChange={v => setStart(v?.toDate())} ampm={false} />
+                <DateTimePicker label="End" value={dayjs(end)} onChange={v => setEnd(v?.toDate() ?? new Date())} ampm={false} />
             </Grid>
         </Grid>
     );
