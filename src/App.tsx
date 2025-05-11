@@ -119,13 +119,11 @@ function App() {
                             <p>
                                 {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working hard on the following packages.
                             </p>
-                            <p>
-                                <Grid container size="grow">
-                                    <Box maxHeight={300} width="100%">
-                                        <ActiveBuildsTable dashboardState={dashboardState} />
-                                    </Box>
-                                </Grid>
-                            </p>
+                            <Grid container size="grow">
+                                <Box maxHeight={300} width="100%">
+                                    <ActiveBuildsTable dashboardState={dashboardState} />
+                                </Box>
+                            </Grid>
                         </Grid>
                         <Grid size="auto">
                             <Divider orientation="horizontal" />

@@ -5,6 +5,7 @@ import {Link} from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelCircleIcon from "@mui/icons-material/Cancel";
 import PendingCircleIcon from "@mui/icons-material/Pending";
+import BuildFailureReason from "./BuildFailureReason.tsx";
 
 interface PackageTableProperties {
     api: RebuilderdAPI;
@@ -50,7 +51,14 @@ export function PackageTable({ api, packages }: PackageTableProperties) {
                         {params.row.built_at.toUTCString()}
                     </Link>
                 );
-            }, minWidth: 250
+            },
+            minWidth: 250
+        },
+        {
+            field: "failure_reason",
+            headerName: "Reason",
+            renderCell: (params: GridCellParams<PackageRelease>) => <BuildFailureReason api={api} packageInfo={params.row}/>,
+            minWidth: 350
         }
     ], [api]);
 
