@@ -2,7 +2,7 @@ import type { PackageRelease } from "../../api/RebuilderdAPI.ts";
 import type {IBuildFailureClassifier} from "../BuildFailureClassifier.ts";
 import type {IBuildFailure} from "../BuildFailureClassifier.ts";
 
-type NotReproducibleReason = "SIZE_DIFFERS" | "SHA1_DIFFERS" | "DIFFERENT_NUMBER_OF_FILES"
+type NotReproducibleReason = "SIZE_DIFFERS" | "SHA1_DIFFERS" | "MD5_DIFFERS" | "DIFFERENT_NUMBER_OF_FILES"
 
 export class NotReproducibleBuildFailure implements IBuildFailure {
     failedArtifacts: Map<string, NotReproducibleReason>;
@@ -18,6 +18,7 @@ export class NotReproducibleBuildFailure implements IBuildFailure {
 
 const sizeDiffersRegexp = /^size differs for (?<ArtifactName>.+\.u?deb)$/gm
 const sha1DiffersRegexp = /^value of sha1 differs for (?<ArtifactName>.+\.u?deb)$/gm
+const md5DiffersRegexp = /^value of md5 differs for (?<ArtifactName>.+\.u?deb)$/gm
 const differentNumberOfFilesRegexp = /new buildinfo contains a different number of files/m
 
 export class NotReproducibleClassifier implements IBuildFailureClassifier {
@@ -39,6 +40,14 @@ export class NotReproducibleClassifier implements IBuildFailureClassifier {
             }
 
             failedArtifacts.set(matches.groups.ArtifactName, "SHA1_DIFFERS");
+        }
+
+        while ((matches = md5DiffersRegexp.exec(log)) !== null) {
+            if (matches.groups === undefined) {
+                continue;
+            }
+
+            failedArtifacts.set(matches.groups.ArtifactName, "MD5_DIFFERS");
         }
 
         if (differentNumberOfFilesRegexp.test(log)) {
