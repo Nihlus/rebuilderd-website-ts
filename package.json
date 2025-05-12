@@ -1,5 +1,6 @@
 {
   "name": "rebuilderd-website-ts",
+  "homepage": "https://reproduce.algiz.nu/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
