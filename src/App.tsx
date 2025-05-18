@@ -1,22 +1,23 @@
-
-
-import {ThemeProvider, createTheme} from "@mui/material/styles";
+import {createTheme, ThemeProvider} from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import {PackageTable} from "./PackageTable.tsx";
 import {Box, Grid} from "@mui/material";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import RebuilderdAPI, {PackageRelease} from "./api/RebuilderdAPI.ts";
+import {DashboardState} from "./api/RebuilderdAPI.ts";
 import * as config from "./config/config.json";
 import {RebuildChart} from "./RebuildChart.tsx";
 import {LocalizationProvider} from "@mui/x-date-pickers";
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import Divider from "@mui/material/Divider";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelCircleIcon from "@mui/icons-material/Cancel";
 import PendingCircleIcon from "@mui/icons-material/Pending";
-import {DashboardState} from "./api/RebuilderdAPI.ts";
 import {ActiveBuildsTable} from "./ActiveBuildsTable.tsx";
 
+/**
+ * Holds the general application theme.
+ */
 const theme = createTheme({
     colorSchemes: {
         light: true,
@@ -24,6 +25,9 @@ const theme = createTheme({
     }
 });
 
+/**
+ * Determines the current user's locale.
+ */
 function determineLocale(): string {
     // All modern browsers support this. Should match what's used by localeCompare() etc.
     const intl = window.Intl;
@@ -42,14 +46,23 @@ function determineLocale(): string {
     return navigator.language ?? "en-US";
 }
 
+/**
+ * Formats the given count as a percentage of the given total, taking into account if either are undefined.
+ * @param count The count.
+ * @param total The total.
+ */
 function formatPercentage(count: number | undefined, total: number | undefined): string {
     if (count === undefined || total === undefined) {
         return "An unknown number";
     }
 
-    return (count / total).toLocaleString(undefined, { style: "percent", minimumFractionDigits: 2 });
+    return (count / total).toLocaleString(undefined, {style: "percent", minimumFractionDigits: 2});
 }
 
+/**
+ * Renders the application.
+ * @constructor
+ */
 function App() {
     const api = useMemo(() => {
         return new RebuilderdAPI(new URL(config.rebuilderd_host));
@@ -102,14 +115,17 @@ function App() {
                                 <Divider orientation="horizontal"/>
                             </h2>
                             <p>
-                                <span style={{ display: "flex", alignItems: "center" }}>
-                                    <CheckCircleIcon color="success" style={{ marginRight: 6 }}/><span>{formatPercentage(goodPackageCount, totalPackages)} of all packages have been bit-for-bit reproduced</span>
+                                <span style={{display: "flex", alignItems: "center"}}>
+                                    <CheckCircleIcon color="success"
+                                                     style={{marginRight: 6}}/><span>{formatPercentage(goodPackageCount, totalPackages)} of all packages have been bit-for-bit reproduced</span>
                                 </span>
-                                <span style={{ display: "flex", alignItems: "center" }}>
-                                    <CancelCircleIcon color="error" style={{ marginRight: 6 }}/><span>{formatPercentage(badPackageCount, packages?.length)} of all packages have been attempted but failed</span>
+                                <span style={{display: "flex", alignItems: "center"}}>
+                                    <CancelCircleIcon color="error"
+                                                      style={{marginRight: 6}}/><span>{formatPercentage(badPackageCount, packages?.length)} of all packages have been attempted but failed</span>
                                 </span>
-                                <span style={{ display: "flex", alignItems: "center" }}>
-                                    <PendingCircleIcon color="info" style={{ marginRight: 6 }}/><span>{formatPercentage(unknownPackageCount, packages?.length)} of all packages haven't been attempted yet</span>
+                                <span style={{display: "flex", alignItems: "center"}}>
+                                    <PendingCircleIcon color="info"
+                                                       style={{marginRight: 6}}/><span>{formatPercentage(unknownPackageCount, packages?.length)} of all packages haven't been attempted yet</span>
                                 </span>
                             </p>
                             <h2>
@@ -117,22 +133,23 @@ function App() {
                                 <Divider orientation="horizontal"/>
                             </h2>
                             <p>
-                                {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working hard on the following packages.
+                                {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working
+                                hard on the following packages.
                             </p>
                             <Grid container size="grow">
                                 <Box maxHeight={300} width="100%">
-                                    <ActiveBuildsTable dashboardState={dashboardState} />
+                                    <ActiveBuildsTable dashboardState={dashboardState}/>
                                 </Box>
                             </Grid>
                         </Grid>
                         <Grid size="auto">
-                            <Divider orientation="horizontal" />
+                            <Divider orientation="horizontal"/>
                         </Grid>
-                        <RebuildChart api={api} packages={packages} />
+                        <RebuildChart api={api} packages={packages}/>
                     </Grid>
                     <Grid container size="grow">
                         <Box maxHeight="100vh" width="100%" paddingBottom={6}>
-                            <PackageTable api={api} packages={packages} />
+                            <PackageTable api={api} packages={packages}/>
                         </Box>
                     </Grid>
                 </Grid>

@@ -9,12 +9,9 @@ import Grid from "@mui/material/Grid";
 import Select from "@mui/material/Select";
 import {MenuItem} from "@mui/material";
 
-interface RebuildChartProperties {
-    api: RebuilderdAPI;
-    packages: PackageRelease[] | null;
-    architecture?: string;
-}
-
+/**
+ * Represents computed data series based on the current known packages.
+ */
 interface RebuildChartSeries {
     xAxis: Date[];
     goodSeries: number[];
@@ -23,8 +20,19 @@ interface RebuildChartSeries {
     selectedGranularity: ChartGranularity;
 }
 
+/**
+ * Enumerates data granularity levels for the chart.
+ */
 type ChartGranularity = "Month" | "Day" | "Hour" | "Auto";
 
+/**
+ * Computes a set of data series for build statuses over time given the package statuses.
+ * @param packages The packages.
+ * @param granularity The data granularty to use. Affects the number of data points.
+ * @param end The start of the time slice to compute. Defaults to now.
+ * @param start The end of the time slice to compute. Defaults to the earliest known build.
+ * @return The computed data series.
+ */
 function createDataSeries(
     packages: PackageRelease[] | null,
     granularity: ChartGranularity = "Auto",
@@ -36,18 +44,18 @@ function createDataSeries(
     const badSeries: number[] = [];
     const unknownSeries: number[] = [];
 
-    if (packages === null)
-    {
+    if (packages === null) {
         return {
             xAxis: xAxis,
             goodSeries: goodSeries,
             badSeries: badSeries,
             unknownSeries: unknownSeries,
             selectedGranularity: "Month"
-        }
+        };
     }
 
-    const sortedBuiltPackages = packages?.filter(p => p.built_at !== undefined).sort((a, b) => a.built_at! < b.built_at! ? -1 : 1);
+    const sortedBuiltPackages = packages?.filter(p => p.built_at !== undefined).sort((a, b) => a.built_at! <
+    b.built_at! ? -1 : 1);
     if (sortedBuiltPackages.length <= 0) {
         return {
             xAxis: xAxis,
@@ -55,7 +63,7 @@ function createDataSeries(
             badSeries: badSeries,
             unknownSeries: unknownSeries,
             selectedGranularity: "Month"
-        }
+        };
     }
 
     // default to the earliest value
@@ -72,14 +80,11 @@ function createDataSeries(
 
         if (roughHoursBetween <= 200) {
             granularity = "Hour";
-        }
-        else if (roughDaysBetween <= 200) {
+        } else if (roughDaysBetween <= 200) {
             granularity = "Day";
-        }
-        else if (roughMonthsBetween <= 200) {
+        } else if (roughMonthsBetween <= 200) {
             granularity = "Month";
-        }
-        else {
+        } else {
             // fall back to months
             granularity = "Month";
         }
@@ -91,8 +96,7 @@ function createDataSeries(
 
         let goodPackageCount = 0;
         let badPackageCount = 0;
-        for (const pkg of packagesAtSample)
-        {
+        for (const pkg of packagesAtSample) {
             switch (pkg.status) {
                 case "GOOD": {
                     ++goodPackageCount;
@@ -145,16 +149,22 @@ function createDataSeries(
         badSeries: badSeries,
         unknownSeries: unknownSeries,
         selectedGranularity: granularity
-    }
+    };
 }
 
+/**
+ * Formates the given date based on the chart granularity.
+ * @param date The date to format.
+ * @param granularity The data granularity.
+ * @return The formatted date.
+ */
 function formatDate(date: Date, granularity: ChartGranularity): string {
     switch (granularity) {
         case "Month": {
-            return `${date.getUTCFullYear()}-${date.getUTCMonth()}`
+            return `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
         }
         case "Day": {
-            return `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`
+            return `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
         }
         case "Hour": {
             return `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()} ${date.getUTCHours()}:${date.getUTCMinutes()}:${date.getUTCSeconds()}`;
@@ -165,9 +175,25 @@ function formatDate(date: Date, granularity: ChartGranularity): string {
     }
 }
 
+
+/**
+ * Represents the properties of the RebuildChart component.
+ */
+interface RebuildChartProperties {
+    api: RebuilderdAPI;
+    packages: PackageRelease[] | null;
+    architecture?: string;
+}
+
+/**
+ * Renders a stacked chart of reproduction status data.
+ * @param packages The packages.
+ * @param architecture The architecture of the packages to render. "all" is always included.
+ * @constructor
+ */
 export function RebuildChart({packages, architecture}: RebuildChartProperties) {
     if (architecture !== undefined) {
-        packages = packages?.filter(p => p.architecture === architecture) ?? null;
+        packages = packages?.filter(p => p.architecture === architecture || p.architecture === "all") ?? null;
     }
 
     const [granularity, setGranularity] = useState<ChartGranularity>("Auto");
@@ -195,9 +221,36 @@ export function RebuildChart({packages, architecture}: RebuildChartProperties) {
                             },
                         ]}
                         series={[
-                            { id: "GOOD", type: "line", data: seriesData.goodSeries, label: "GOOD", stack: "total", area: true, showMark: false, color: theme.palette.success.dark },
-                            { id: "BAD", type: "line", data: seriesData.badSeries, label: "BAD", stack: "total", area: true, showMark: false, color: theme.palette.error.dark },
-                            { id: "UNKWN", type: "line", data: seriesData.unknownSeries, label: "UNKWN", stack: "total", area: true, showMark: false, color: theme.palette.warning.dark }
+                            {
+                                id: "GOOD",
+                                type: "line",
+                                data: seriesData.goodSeries,
+                                label: "GOOD",
+                                stack: "total",
+                                area: true,
+                                showMark: false,
+                                color: theme.palette.success.dark
+                            },
+                            {
+                                id: "BAD",
+                                type: "line",
+                                data: seriesData.badSeries,
+                                label: "BAD",
+                                stack: "total",
+                                area: true,
+                                showMark: false,
+                                color: theme.palette.error.dark
+                            },
+                            {
+                                id: "UNKWN",
+                                type: "line",
+                                data: seriesData.unknownSeries,
+                                label: "UNKWN",
+                                stack: "total",
+                                area: true,
+                                showMark: false,
+                                color: theme.palette.warning.dark
+                            }
                         ]}
                         loading={packages === null}
                     />
@@ -218,8 +271,18 @@ export function RebuildChart({packages, architecture}: RebuildChartProperties) {
                         <MenuItem value="Hour">Hour</MenuItem>
                     </Select>
                 </Box>
-                <DateTimePicker label="Start" value={dayjs(start ?? seriesData.xAxis[0])} onChange={v => setStart(v?.toDate())} ampm={false} />
-                <DateTimePicker label="End" value={dayjs(end)} onChange={v => setEnd(v?.toDate() ?? new Date())} ampm={false} />
+                <DateTimePicker
+                    label="Start"
+                    value={dayjs(start ?? seriesData.xAxis[0])}
+                    onChange={v => setStart(v?.toDate())}
+                    ampm={false}
+                />
+                <DateTimePicker
+                    label="End"
+                    value={dayjs(end)}
+                    onChange={v => setEnd(v?.toDate() ?? new Date())}
+                    ampm={false}
+                />
             </Grid>
         </Grid>
     );

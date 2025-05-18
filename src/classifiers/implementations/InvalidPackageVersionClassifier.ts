@@ -1,12 +1,16 @@
-import type { PackageRelease } from "../../api/RebuilderdAPI.ts";
+import type {PackageRelease} from "../../api/RebuilderdAPI.ts";
 import type {IBuildFailureClassifier} from "../BuildFailureClassifier.ts";
 import type {IBuildFailure} from "../BuildFailureClassifier.ts";
 
+/**
+ * Represents a build failure due to an invalid package version. This means the version is malformed, missing from the
+ * snapshots repo, or otherwise unavailable.
+ */
 export class InvalidPackageVersionBuildFailure implements IBuildFailure {
-    version: string
+    version: string;
 
     constructor(version: string) {
-        this.version = version
+        this.version = version;
     }
 
     format(): string {
@@ -14,8 +18,11 @@ export class InvalidPackageVersionBuildFailure implements IBuildFailure {
     }
 }
 
-const notAValidVersionRegex = /^debsnap: error: (?<Version>.+) is not a valid version$/m
+const notAValidVersionRegex = /^debsnap: error: (?<Version>.+) is not a valid version$/m;
 
+/**
+ * Classifies instances of build failures due to an invalid package version.
+ */
 export class InvalidPackageVersionClassifier implements IBuildFailureClassifier {
     classify(_: PackageRelease, log: string): IBuildFailure | null {
         const matches = notAValidVersionRegex.exec(log);
@@ -23,6 +30,6 @@ export class InvalidPackageVersionClassifier implements IBuildFailureClassifier 
             return null;
         }
 
-        return new InvalidPackageVersionBuildFailure(matches.groups.Version)
+        return new InvalidPackageVersionBuildFailure(matches.groups.Version);
     }
 }

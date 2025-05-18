@@ -7,12 +7,21 @@ import CancelCircleIcon from "@mui/icons-material/Cancel";
 import PendingCircleIcon from "@mui/icons-material/Pending";
 import BuildFailureReason from "./BuildFailureReason.tsx";
 
+/**
+ * Represents the properties of the PackageTable component.
+ */
 interface PackageTableProperties {
     api: RebuilderdAPI;
     packages: PackageRelease[] | null;
 }
 
-export function PackageTable({ api, packages }: PackageTableProperties) {
+/**
+ * Renders a list of known packages and their status.
+ * @param api The rebuilderd api.
+ * @param packages The known packages.
+ * @constructor
+ */
+export function PackageTable({api, packages}: PackageTableProperties) {
     const columns: GridColDef[] = useMemo(() => [
         {
             field: "status",
@@ -57,7 +66,8 @@ export function PackageTable({ api, packages }: PackageTableProperties) {
         {
             field: "failure_reason",
             headerName: "Reason",
-            renderCell: (params: GridCellParams<PackageRelease>) => <BuildFailureReason api={api} packageInfo={params.row}/>,
+            renderCell: (params: GridCellParams<PackageRelease>) => <BuildFailureReason api={api}
+                                                                                        packageInfo={params.row}/>,
             minWidth: 350
         }
     ], [api]);

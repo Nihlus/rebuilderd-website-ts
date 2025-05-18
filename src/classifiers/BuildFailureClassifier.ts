@@ -19,23 +19,59 @@ import {
 } from "./implementations/BuildDependencyInstallationFailedClassifier.ts";
 import {MissingPackageVersionClassifier} from "./implementations/MissingPackageVersionClassifier.ts";
 
+/**
+ * Represents information about a failure to reproducibly build a package.
+ */
 export interface IBuildFailure {
+    /**
+     * Formats the build failure in a human-readable manner. This should return a short, descriptive string that is
+     * unique among the various build failure types.
+     * @return The descriptive string.
+     */
     format(): string;
 }
 
+/**
+ * Represents a build failure that we have no understanding of (yet). This class is used when no classifier matches the
+ * build logs.
+ */
 export class UnknownBuildFailure implements IBuildFailure {
     format(): string {
         return "Unknown";
     }
 }
 
+/**
+ * Represents a class that inspects a package, its build log, and determines whether it can identify a single cause of
+ * the build failing to complete.
+ */
 export interface IBuildFailureClassifier {
+    /**
+     * Inspects the given package, determining whether this classifier can identify a single cause of the build failing
+     * to complete.
+     * @param packageInfo The base package information.
+     * @param log The build log.
+     * @return The identified build failure.
+     */
     classify(packageInfo: PackageRelease, log: string): IBuildFailure | null;
 }
 
+/**
+ * Exposes static, single-point access to all available build failure classifiers.
+ */
 export default class BuildFailureClassifier {
+    /**
+     * Holds the registered classifiers.
+     */
     static classifiers: IBuildFailureClassifier[] = [];
 
+    /**
+     * Inspects the given package, determining whether this classifier can identify a single cause of the build failing
+     * to complete.
+     * @param packageInfo The base package information.
+     * @param log The build log.
+     * @return The identified build failure.
+     */
     public static classify(packageInfo: PackageRelease, log: string): IBuildFailure {
         for (const classifier of BuildFailureClassifier.classifiers) {
             const buildFailure = classifier.classify(packageInfo, log);
@@ -47,6 +83,10 @@ export default class BuildFailureClassifier {
         return new UnknownBuildFailure();
     }
 
+    /**
+     * Registers the given classifier, enabling its use when classifying build logs.
+     * @param instance The classifier to register.
+     */
     public static registerClassifier<T extends IBuildFailureClassifier>(instance: T) {
         BuildFailureClassifier.classifiers.push(instance);
     }

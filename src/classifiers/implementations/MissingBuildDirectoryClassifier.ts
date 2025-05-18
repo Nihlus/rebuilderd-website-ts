@@ -1,9 +1,12 @@
-import type { PackageRelease } from "../../api/RebuilderdAPI.ts";
+import type {PackageRelease} from "../../api/RebuilderdAPI.ts";
 import type {IBuildFailureClassifier} from "../BuildFailureClassifier.ts";
 import type {IBuildFailure} from "../BuildFailureClassifier.ts";
 
 type MissingComponent = "rebuilderd" | "debootsnap" | "mmdebstrap" | "generic";
 
+/**
+ * Represents a build failure due to a missing directory on the rebuilderd worker.
+ */
 export class MissingBuildDirectoryBuildFailure implements IBuildFailure {
     path: string;
     component: MissingComponent;
@@ -22,8 +25,11 @@ export class MissingBuildDirectoryBuildFailure implements IBuildFailure {
     }
 }
 
-const missingDirRegexp = /No such file or directory.+at path "(?<MissingPath>.+)"/
+const missingDirRegexp = /No such file or directory.+at path "(?<MissingPath>.+)"/;
 
+/**
+ * Classifies instances of build failures due to a missing directory on the rebuilderd worker.
+ */
 export class MissingBuildDirectoryClassifier implements IBuildFailureClassifier {
     classify(_: PackageRelease, log: string): IBuildFailure | null {
         const matches = missingDirRegexp.exec(log);

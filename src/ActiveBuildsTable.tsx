@@ -1,19 +1,27 @@
 import {DataGrid, type GridColDef} from "@mui/x-data-grid";
 import {useMemo} from "react";
 import {DashboardState} from "./api/RebuilderdAPI.ts";
-import ConstructionIcon from '@mui/icons-material/Construction';
+import ConstructionIcon from "@mui/icons-material/Construction";
 
+/**
+ * Represents the properties of the ActiveBuildsTable component.
+ */
 interface ActiveBuildsTableProperties {
     dashboardState: DashboardState | null;
 }
 
-export function ActiveBuildsTable({ dashboardState }: ActiveBuildsTableProperties) {
+/**
+ * Renders a list of ongoing builds in the rebuilderd cluster.
+ * @param dashboardState The precomputed dashboard state from the server.
+ * @constructor
+ */
+export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties) {
     const columns: GridColDef[] = useMemo(() => [
         {
             field: "status",
             headerName: "Status",
             renderCell: () => {
-                return <ConstructionIcon color="secondary" />;
+                return <ConstructionIcon color="secondary"/>;
             },
             width: 60,
             resizable: false,

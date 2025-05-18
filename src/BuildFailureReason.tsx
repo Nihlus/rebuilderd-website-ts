@@ -4,12 +4,22 @@ import {useState} from "react";
 import {useEffect} from "react";
 import BuildFailureClassifier from "./classifiers/BuildFailureClassifier.ts";
 
+/**
+ * Represents the properties of the BuildFailureReason component.
+ */
 export interface BuildFailureReasonProperties {
     api: RebuilderdAPI;
-    packageInfo: PackageRelease
+    packageInfo: PackageRelease;
 }
 
-export default function BuildFailureReason({ api, packageInfo }: BuildFailureReasonProperties) {
+/**
+ * Renders a short explanation of a build failure for the given package, fetching the build logs if required and
+ * classifying them.
+ * @param api The rebuilderd API.
+ * @param packageInfo The base information of the package.
+ * @constructor
+ */
+export default function BuildFailureReason({api, packageInfo}: BuildFailureReasonProperties) {
     const [log, setLog] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -25,7 +35,7 @@ export default function BuildFailureReason({ api, packageInfo }: BuildFailureRea
                     setIsLoading(false);
                 }).catch(() => {
                     setIsLoading(false);
-                })
+                });
             }
         ).catch(() => {
             setIsLoading(false);
