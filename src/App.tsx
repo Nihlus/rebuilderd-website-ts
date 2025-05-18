@@ -145,10 +145,12 @@ function App() {
                         <Grid size="auto">
                             <Divider orientation="horizontal"/>
                         </Grid>
-                        <RebuildChart api={api} packages={packages}/>
+                        <Grid container size="grow">
+                            <RebuildChart api={api} packages={packages}/>
+                        </Grid>
                     </Grid>
                     <Grid container size="grow">
-                        <Box maxHeight="100vh" width="100%" paddingBottom={6}>
+                        <Box maxHeight="95vh" width="100%">
                             <PackageTable api={api} packages={packages}/>
                         </Box>
                     </Grid>
