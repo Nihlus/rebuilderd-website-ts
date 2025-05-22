@@ -1,6 +1,5 @@
 import type {PackageRelease} from "../../api/RebuilderdAPI.ts";
-import type {IBuildFailureClassifier} from "../BuildFailureClassifier.ts";
-import type {IBuildFailure} from "../BuildFailureClassifier.ts";
+import type {IBuildFailure, IBuildFailureClassifier} from "../BuildFailureClassifier.ts";
 
 /**
  * Enumerates various reasons why an artifact was deemed not reproducible.
@@ -26,9 +25,9 @@ export class NotReproducibleBuildFailure implements IBuildFailure {
     }
 }
 
-const sizeDiffersRegexp = /^size differs for (?<ArtifactName>.+\.u?deb)$/gm;
-const sha1DiffersRegexp = /^value of sha1 differs for (?<ArtifactName>.+\.u?deb)$/gm;
-const md5DiffersRegexp = /^value of md5 differs for (?<ArtifactName>.+\.u?deb)$/gm;
+const sizeDiffersRegexp = /size differs for (?<ArtifactName>.+\.u?deb)$/gm;
+const sha1DiffersRegexp = /value of sha1 differs for (?<ArtifactName>.+\.u?deb)$/gm;
+const md5DiffersRegexp = /value of md5 differs for (?<ArtifactName>.+\.u?deb)$/gm;
 const differentNumberOfFilesRegexp = /new buildinfo contains a different number of files/m;
 
 /**
