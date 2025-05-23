@@ -4,7 +4,12 @@ import type {IBuildFailure, IBuildFailureClassifier} from "../BuildFailureClassi
 /**
  * Enumerates various reasons why an artifact was deemed not reproducible.
  */
-type NotReproducibleReason = "SIZE_DIFFERS" | "SHA1_DIFFERS" | "MD5_DIFFERS" | "DIFFERENT_NUMBER_OF_FILES"
+type NotReproducibleReason =
+    "SIZE_DIFFERS"
+    | "SHA1_DIFFERS"
+    | "SHA256_DIFFERS"
+    | "MD5_DIFFERS"
+    | "DIFFERENT_NUMBER_OF_FILES"
 
 /**
  * Represents a build failure due to the resulting artifacts not being reproducible.
@@ -27,6 +32,7 @@ export class NotReproducibleBuildFailure implements IBuildFailure {
 
 const sizeDiffersRegexp = /size differs for (?<ArtifactName>.+\.u?deb)$/gm;
 const sha1DiffersRegexp = /value of sha1 differs for (?<ArtifactName>.+\.u?deb)$/gm;
+const sha256DiffersRegexp = /value of sha256 differs for (?<ArtifactName>.+\.u?deb)$/gm;
 const md5DiffersRegexp = /value of md5 differs for (?<ArtifactName>.+\.u?deb)$/gm;
 const differentNumberOfFilesRegexp = /new buildinfo contains a different number of files/m;
 
@@ -52,6 +58,14 @@ export class NotReproducibleClassifier implements IBuildFailureClassifier {
             }
 
             failedArtifacts.set(matches.groups.ArtifactName, "SHA1_DIFFERS");
+        }
+
+        while ((matches = sha256DiffersRegexp.exec(log)) !== null) {
+            if (matches.groups === undefined) {
+                continue;
+            }
+
+            failedArtifacts.set(matches.groups.ArtifactName, "SHA256_DIFFERS");
         }
 
         while ((matches = md5DiffersRegexp.exec(log)) !== null) {
