@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useState} from "react";
 import {ActiveBuild, DashboardState} from "./api/RebuilderdAPI.ts";
 import {DataTable, type DataTableColumn, type DataTableSortStatus} from "mantine-datatable";
-import {IconHammer} from "@tabler/icons-react";
+import {IconProgress} from "@tabler/icons-react";
 import sortBy from "lodash/sortBy";
 import {Center} from "@mantine/core";
 
@@ -25,7 +25,7 @@ export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties)
             render: () => {
                 return (
                     <Center p={2}>
-                        <IconHammer color="var(--mantine-color-cyan-filled)"/>
+                        <IconProgress color="var(--mantine-color-yellow-outline)"/>
                     </Center>
                 );
             },
