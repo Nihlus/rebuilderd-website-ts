@@ -1,8 +1,7 @@
 import type {PackageRelease} from "./api/RebuilderdAPI.ts";
 import RebuilderdAPI from "./api/RebuilderdAPI.ts";
-import {useState} from "react";
-import {useEffect} from "react";
-import BuildFailureClassifier from "./classifiers/BuildFailureClassifier.ts";
+import {useEffect, useState} from "react";
+import BuildFailureClassifier, {type IBuildFailure} from "./classifiers/BuildFailureClassifier.ts";
 
 /**
  * Represents the properties of the BuildFailureReason component.
@@ -20,8 +19,8 @@ export interface BuildFailureReasonProperties {
  * @constructor
  */
 export default function BuildFailureReason({api, packageInfo}: BuildFailureReasonProperties) {
-    const [log, setLog] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [buildFailure, setBuildFailure] = useState<IBuildFailure | undefined | null>(undefined)
 
     useEffect(() => {
         if (packageInfo.status !== "BAD" || packageInfo.build_id === undefined) {
@@ -31,7 +30,7 @@ export default function BuildFailureReason({api, packageInfo}: BuildFailureReaso
         const logUrl = api.getLogUrl(packageInfo.build_id);
         fetch(logUrl).then(res => {
                 res.text().then(text => {
-                    setLog(text);
+                    setBuildFailure(BuildFailureClassifier.classify(packageInfo, text))
                     setIsLoading(false);
                 }).catch(() => {
                     setIsLoading(false);
@@ -50,10 +49,5 @@ export default function BuildFailureReason({api, packageInfo}: BuildFailureReaso
         return "Checking...";
     }
 
-    if (log === null) {
-        return "No logs available";
-    }
-
-    const buildFailure = BuildFailureClassifier.classify(packageInfo, log);
-    return buildFailure.format();
+    return buildFailure?.format();
 }

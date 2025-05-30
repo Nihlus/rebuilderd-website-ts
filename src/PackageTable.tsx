@@ -3,7 +3,7 @@ import RebuilderdAPI, {PackageRelease} from "./api/RebuilderdAPI.ts";
 import BuildFailureReason from "./BuildFailureReason.tsx";
 import {DataTable, type DataTableColumn, type DataTableSortStatus} from "mantine-datatable";
 import {IconCircleCheck, IconCircleX, IconProgress} from "@tabler/icons-react";
-import {Anchor, Container} from "@mantine/core";
+import {Anchor, Center} from "@mantine/core";
 import sortBy from 'lodash/sortBy';
 
 /**
@@ -29,27 +29,28 @@ export function PackageTable({api, packages}: PackageTableProperties) {
                 switch (record.status) {
                     case "GOOD": {
                         return (
-                            <Container>
+                            <Center p={2}>
                                 <IconCircleCheck color="var(--mantine-color-green-outline)"/>
-                            </Container>
+                            </Center>
                         );
                     }
                     case "BAD": {
                         return (
-                            <Container>
+                            <Center p={2}>
                                 <IconCircleX color="var(--mantine-color-orange-filled)"/>
-                            </Container>
+                            </Center>
                         );
                     }
                     case "UNKWN": {
                         return (
-                            <Container>
+                            <Center p={2}>
                                 <IconProgress color="var(--mantine-color-yellow-outline)"/>
-                            </Container>
+                            </Center>
                         );
                     }
                 }
             },
+            width: 80,
             sortable: true,
             resizable: false
         },

@@ -71,44 +71,52 @@ function App() {
     return (
         <MantineProvider theme={theme} defaultColorScheme={"dark"}>
             <Grid grow columns={2} ml={12} mr={12}>
-                <Grid.Col span={1} mah={"100vh"}>
-                    <h1>Rebuilder statistics for debian/bookworm amd64</h1>
-                    <h2>
-                        Success rate breakdown
-                        <Divider orientation="horizontal"/>
-                    </h2>
-                    <Group>
-                        <IconCircleCheck color="var(--mantine-color-green-outline)"/>
-                        {formatPercentage(goodPackageCount, totalPackages)} of all packages have been bit-for-bit
-                        reproduced
-                    </Group>
-                    <Group>
-                        <IconCircleX color="var(--mantine-color-orange-filled)"/>
-                        {formatPercentage(badPackageCount, packages?.length)} of all packages have been attempted
-                        but failed
-                    </Group>
-                    <Group>
-                        <IconProgress color="var(--mantine-color-yellow-outline)"/>
-                        {formatPercentage(unknownPackageCount, packages?.length)} of all packages haven't been
-                        attempted yet
-                    </Group>
-                    <h2>
-                        Queue
-                        <Divider orientation="horizontal"/>
-                    </h2>
-                    {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working
-                    hard on the following packages.
-                    <Space h={"md"}/>
-                    <Flex direction={"column"} mah={350}>
-                        <ActiveBuildsTable dashboardState={dashboardState}/>
+                <Grid.Col span={1} p={"2vh"} mah={"100vh"}>
+                    <Flex direction={"column"} h={"30%"}>
+                        <h1>Rebuilder statistics for debian/bookworm amd64</h1>
+                        <h2>
+                            Success rate breakdown
+                            <Divider orientation="horizontal"/>
+                        </h2>
+                        <Group>
+                            <IconCircleCheck color="var(--mantine-color-green-outline)"/>
+                            {formatPercentage(goodPackageCount, totalPackages)} of all packages have been bit-for-bit
+                            reproduced
+                        </Group>
+                        <Group>
+                            <IconCircleX color="var(--mantine-color-orange-filled)"/>
+                            {formatPercentage(badPackageCount, packages?.length)} of all packages have been attempted
+                            but failed
+                        </Group>
+                        <Group>
+                            <IconProgress color="var(--mantine-color-yellow-outline)"/>
+                            {formatPercentage(unknownPackageCount, packages?.length)} of all packages haven't been
+                            attempted yet
+                        </Group>
+                        <h2>
+                            Queue
+                            <Divider orientation="horizontal"/>
+                        </h2>
+                        {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working
+                        hard on the following packages.
                     </Flex>
                     <Space h={"xl"}/>
                     <Divider orientation="horizontal"/>
                     <Space h={"xl"}/>
-                    <RebuildChart api={api} packages={packages}/>
+                    <Flex direction={"column"} h={"60%"}>
+                        <ActiveBuildsTable dashboardState={dashboardState}/>
+                    </Flex>
                 </Grid.Col>
-                <Grid.Col span={1} mah={"100vh"} p={"2vh"}>
-                    <PackageTable api={api} packages={packages}/>
+                <Grid.Col span={1} p={"2vh"} mah={"100vh"}>
+                    <Flex direction={"column"} h={"30%"}>
+                        <RebuildChart api={api} packages={packages}/>
+                    </Flex>
+                    <Space h={"xl"}/>
+                    <Divider orientation="horizontal"/>
+                    <Space h={"xl"}/>
+                    <Flex direction={"column"} h={"60%"}>
+                        <PackageTable api={api} packages={packages}/>
+                    </Flex>
                 </Grid.Col>
             </Grid>
         </MantineProvider>

@@ -2,8 +2,8 @@ import {useEffect, useMemo, useState} from "react";
 import {ActiveBuild, DashboardState} from "./api/RebuilderdAPI.ts";
 import {DataTable, type DataTableColumn, type DataTableSortStatus} from "mantine-datatable";
 import {IconHammer} from "@tabler/icons-react";
-import {Container} from "@mantine/core";
 import sortBy from "lodash/sortBy";
+import {Center} from "@mantine/core";
 
 /**
  * Represents the properties of the ActiveBuildsTable component.
@@ -24,12 +24,14 @@ export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties)
             title: "Status",
             render: () => {
                 return (
-                    <Container>
+                    <Center p={2}>
                         <IconHammer color="var(--mantine-color-cyan-filled)"/>
-                    </Container>
+                    </Center>
                 );
             },
-            width: 80
+            width: 80,
+            sortable: true,
+            resizable: false
         },
         {
             accessor: "pkgbase.name",
@@ -71,7 +73,7 @@ export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties)
         }
     ], []);
 
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 100;
     const [page, setPage] = useState(1);
     const [records, setRecords] = useState(dashboardState?.active_builds.slice(0, PAGE_SIZE) ?? []);
 
