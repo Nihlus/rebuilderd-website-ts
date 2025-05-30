@@ -107,6 +107,7 @@ export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties)
             fetching={dashboardState == null}
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
+            verticalSpacing={0}
         />
     );
 }

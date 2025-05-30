@@ -81,7 +81,7 @@ export function PackageTable({api, packages}: PackageTableProperties) {
                 }
 
                 return (
-                    <Anchor href={api.getLogUrl(record.build_id).toString()}>
+                    <Anchor href={api.getLogUrl(record.build_id).toString()} size={"sm"}>
                         {record.built_at.toUTCString()}
                     </Anchor>
                 );
@@ -136,6 +136,7 @@ export function PackageTable({api, packages}: PackageTableProperties) {
             highlightOnHover
             sortStatus={sortStatus}
             onSortStatusChange={setSortStatus}
+            verticalSpacing={0}
         />
     );
 }
