@@ -1,7 +1,8 @@
-import {DataGrid, type GridColDef} from "@mui/x-data-grid";
-import {useMemo} from "react";
-import {DashboardState} from "./api/RebuilderdAPI.ts";
-import ConstructionIcon from "@mui/icons-material/Construction";
+import {useEffect, useMemo, useState} from "react";
+import {ActiveBuild, DashboardState} from "./api/RebuilderdAPI.ts";
+import {DataTable, type DataTableColumn} from "mantine-datatable";
+import {IconHammer} from "@tabler/icons-react";
+import {Container} from "@mantine/core";
 
 /**
  * Represents the properties of the ActiveBuildsTable component.
@@ -16,49 +17,83 @@ interface ActiveBuildsTableProperties {
  * @constructor
  */
 export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties) {
-    const columns: GridColDef[] = useMemo(() => [
+    const columns: DataTableColumn<ActiveBuild>[] = useMemo(() => [
         {
-            field: "status",
-            headerName: "Status",
-            renderCell: () => {
-                return <ConstructionIcon color="secondary"/>;
+            accessor: "status",
+            title: "Status",
+            render: () => {
+                return (
+                    <Container>
+                        <IconHammer color="var(--mantine-color-cyan-filled)"/>
+                    </Container>
+                );
             },
-            width: 60,
-            resizable: false,
-            filterable: false,
-            sortable: false
+            width: 80
         },
-        {field: "name", headerName: "Name", width: 150, valueGetter: (_, row) => row.pkgbase.name},
-        {field: "version", headerName: "Version"},
         {
-            field: "architecture",
-            headerName: "Architecture",
+            accessor: "pkgbase.name",
+            title: "Name",
             width: 150,
-            valueGetter: (_, row) => row.pkgbase.architecture
+            resizable: true,
+            sortable: true
         },
-        {field: "worker_id", headerName: "Worker", width: 150},
+        {accessor: "version", title: "Version"},
         {
-            field: "queued_at",
-            headerName: "Queued at",
-            valueFormatter: (value?: Date) => value?.toUTCString() ?? "Not yet queued",
-            minWidth: 250
+            accessor: "pkgbase.architecture",
+            title: "Architecture",
+            width: 150,
+            resizable: true,
+            sortable: true
         },
         {
-            field: "started_at",
-            headerName: "Started at",
-            valueFormatter: (value?: Date) => value?.toUTCString() ?? "Not yet started",
-            minWidth: 250
+            accessor: "worker_id",
+            headerName: "Worker",
+            width: 150,
+            resizable: true,
+            sortable: true
+        },
+        {
+            accessor: "queued_at",
+            title: "Queued at",
+            render: (record) => record.queued_at?.toUTCString() ?? "Not yet queued",
+            minWidth: 250,
+            resizable: true,
+            sortable: true
+        },
+        {
+            accessor: "started_at",
+            title: "Started at",
+            render: (record) => record.started_at?.toUTCString() ?? "Not yet started",
+            minWidth: 250,
+            resizable: true,
+            sortable: true
         }
     ], []);
 
+    const PAGE_SIZE = 15;
+    const [page, setPage] = useState(1);
+    const [records, setRecords] = useState(dashboardState?.active_builds.slice(0, PAGE_SIZE) ?? []);
+
+    useEffect(() => {
+        const from = (page - 1) * PAGE_SIZE;
+        const to = from + PAGE_SIZE;
+
+        setRecords(dashboardState?.active_builds.slice(from, to) ?? []);
+    }, [dashboardState?.active_builds, page]);
+
     return (
-        <DataGrid
-            rows={dashboardState?.active_builds ?? []}
+        <DataTable
+            records={records}
             columns={columns}
-            getRowId={row => row.id}
-            loading={dashboardState === null}
-            rowHeight={30}
-            columnHeaderHeight={40}
+            withColumnBorders
+            withTableBorder
+            striped
+            highlightOnHover
+            totalRecords={dashboardState?.active_builds.length ?? 0}
+            recordsPerPage={PAGE_SIZE}
+            page={page}
+            onPageChange={p => setPage(p)}
+            fetching={dashboardState == null}
         />
     );
 }

@@ -1,23 +1,15 @@
 import RebuilderdAPI, {PackageRelease} from "./api/RebuilderdAPI.ts";
-import {LineChart} from "@mui/x-charts/LineChart";
-import {useTheme} from "@mui/material/styles";
 import {useMemo, useState} from "react";
-import Box from "@mui/material/Box";
-import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
-import dayjs from "dayjs";
-import Grid from "@mui/material/Grid";
-import Select from "@mui/material/Select";
-import {MenuItem} from "@mui/material";
+import {Combobox, Group, Input, InputBase, Stack, useCombobox} from "@mantine/core";
+import {AreaChart} from "@mantine/charts";
+import {DateTimePicker} from "@mantine/dates";
 
-/**
- * Represents computed data series based on the current known packages.
- */
-interface RebuildChartSeries {
-    xAxis: Date[];
-    goodSeries: number[];
-    badSeries: number[];
-    unknownSeries: number[];
-    selectedGranularity: ChartGranularity;
+interface RebuildChartDataPoint {
+    tick: string;
+    date: Date;
+    good: number;
+    bad: number;
+    unknown: number;
 }
 
 /**
@@ -38,32 +30,18 @@ function createDataSeries(
     granularity: ChartGranularity = "Auto",
     end?: Date,
     start?: Date
-): RebuildChartSeries {
-    const xAxis: Date[] = [];
-    const goodSeries: number[] = [];
-    const badSeries: number[] = [];
-    const unknownSeries: number[] = [];
+): RebuildChartDataPoint[] {
+    const data: RebuildChartDataPoint[] = [];
+    let selectedGranularity: ChartGranularity = "Month"
 
     if (packages === null) {
-        return {
-            xAxis: xAxis,
-            goodSeries: goodSeries,
-            badSeries: badSeries,
-            unknownSeries: unknownSeries,
-            selectedGranularity: "Month"
-        };
+        return data;
     }
 
     const sortedBuiltPackages = packages?.filter(p => p.built_at !== undefined).sort((a, b) => a.built_at! <
     b.built_at! ? -1 : 1);
     if (sortedBuiltPackages.length <= 0) {
-        return {
-            xAxis: xAxis,
-            goodSeries: goodSeries,
-            badSeries: badSeries,
-            unknownSeries: unknownSeries,
-            selectedGranularity: "Month"
-        };
+        return data;
     }
 
     // default to the earliest value
@@ -79,18 +57,20 @@ function createDataSeries(
         const roughMonthsBetween = Math.floor(timeDifference / 2628000000);
 
         if (roughHoursBetween <= 200) {
-            granularity = "Hour";
+            selectedGranularity = "Hour";
         } else if (roughDaysBetween <= 200) {
-            granularity = "Day";
+            selectedGranularity = "Day";
         } else if (roughMonthsBetween <= 200) {
-            granularity = "Month";
+            selectedGranularity = "Month";
         } else {
             // fall back to months
-            granularity = "Month";
+            selectedGranularity = "Month";
         }
+    } else {
+        selectedGranularity = granularity;
     }
 
-    let sampleDate = new Date(start);
+    const sampleDate = new Date(start);
     while (sampleDate <= end) {
         const packagesAtSample = sortedBuiltPackages?.filter(p => p.built_at! <= sampleDate);
 
@@ -109,17 +89,16 @@ function createDataSeries(
             }
         }
 
-        xAxis.push(new Date(sampleDate));
-        goodSeries.push(goodPackageCount);
-        badSeries.push(badPackageCount);
-        unknownSeries.push(packages.length - goodPackageCount - badPackageCount);
-
-        if (sampleDate == end) {
-            break;
-        }
+        data.push({
+            tick: formatDate(sampleDate, selectedGranularity),
+            date: new Date(sampleDate),
+            good: goodPackageCount,
+            bad: badPackageCount,
+            unknown: packages.length - goodPackageCount - badPackageCount
+        })
 
         // increment by one unit (JS handles rollover)
-        switch (granularity) {
+        switch (selectedGranularity) {
             case "Month": {
                 sampleDate.setUTCMonth(sampleDate.getUTCMonth() + 1);
                 break;
@@ -132,24 +111,10 @@ function createDataSeries(
                 sampleDate.setUTCHours(sampleDate.getUTCHours() + 1);
                 break;
             }
-            default: {
-                throw new RangeError("Invalid data granularity: " + granularity);
-            }
-        }
-
-        // always capture the last data point as now
-        if (sampleDate > end) {
-            sampleDate = end;
         }
     }
 
-    return {
-        xAxis: xAxis,
-        goodSeries: goodSeries,
-        badSeries: badSeries,
-        unknownSeries: unknownSeries,
-        selectedGranularity: granularity
-    };
+    return data;
 }
 
 /**
@@ -199,91 +164,83 @@ export function RebuildChart({packages, architecture}: RebuildChartProperties) {
     const [granularity, setGranularity] = useState<ChartGranularity>("Auto");
     const [start, setStart] = useState<Date | undefined>(undefined);
     const [end, setEnd] = useState<Date | undefined>(undefined);
-    const seriesData = useMemo(() => createDataSeries(packages, granularity, end, start), [end, granularity, packages, start]);
-    const theme = useTheme();
+    const data = useMemo(() => createDataSeries(packages, granularity, end, start), [end, granularity, packages, start]);
+
+    const granularityCombobox = useCombobox({
+        onDropdownClose: () => granularityCombobox.resetSelectedOption()
+    });
 
     return (
-        <Grid container direction="column" size="grow">
-            <Grid size="grow">
-                <Box display="flex" alignItems="stretch" width="100%" height="100%">
-                    <LineChart
-                        xAxis={[{
-                            id: "Date",
-                            scaleType: "time",
-                            data: seriesData.xAxis,
-                            min: seriesData.xAxis[0],
-                            max: seriesData.xAxis[-1],
-                            valueFormatter: (date) => formatDate(date, seriesData.selectedGranularity)
-                        }]}
-                        yAxis={[
-                            {
-                                width: 70,
-                            },
-                        ]}
-                        series={[
-                            {
-                                id: "GOOD",
-                                type: "line",
-                                data: seriesData.goodSeries,
-                                label: "GOOD",
-                                stack: "total",
-                                area: true,
-                                showMark: false,
-                                color: theme.palette.success.dark
-                            },
-                            {
-                                id: "BAD",
-                                type: "line",
-                                data: seriesData.badSeries,
-                                label: "BAD",
-                                stack: "total",
-                                area: true,
-                                showMark: false,
-                                color: theme.palette.error.dark
-                            },
-                            {
-                                id: "UNKWN",
-                                type: "line",
-                                data: seriesData.unknownSeries,
-                                label: "UNKWN",
-                                stack: "total",
-                                area: true,
-                                showMark: false,
-                                color: theme.palette.warning.dark
-                            }
-                        ]}
-                        loading={packages === null}
-                    />
-                </Box>
-            </Grid>
-            <Grid container size="auto" direction="row" spacing={2} columns={3}>
-                <Box minWidth={200}>
-                    <Select
-                        labelId="chart-granularity-select-label"
-                        id="chart-granularity-select"
-                        label="Granularity"
-                        value={granularity} onChange={g => setGranularity(g.target.value as ChartGranularity)}
-                        fullWidth={true}
-                    >
-                        <MenuItem value="Auto">Auto</MenuItem>
-                        <MenuItem value="Month">Month</MenuItem>
-                        <MenuItem value="Day">Day</MenuItem>
-                        <MenuItem value="Hour">Hour</MenuItem>
-                    </Select>
-                </Box>
+        <Stack justify={"flex-start"}>
+            <AreaChart
+                type="percent"
+                curveType="natural"
+                data={data}
+                dataKey="tick"
+                series={[
+                    {
+                        name: "bad",
+                        label: "Bad",
+                        color: "var(--mantine-color-orange-filled)"
+                    },
+                    {
+                        name: "good",
+                        label: "Good",
+                        color: "var(--mantine-color-green-outline)"
+                    },
+                    {
+                        name: "unknown",
+                        label: "Unknown",
+                        color: "var(--mantine-color-cyan-filled)"
+                    }
+                ]}
+                h={300}
+                withLegend
+            />
+            <Group>
+                <Combobox
+                    store={granularityCombobox}
+                    onOptionSubmit={value => {
+                        setGranularity(value as ChartGranularity);
+                        granularityCombobox.closeDropdown();
+                    }}
+                >
+                    <Combobox.Target>
+                        <InputBase
+                            label={"Granularity"}
+                            component={"button"}
+                            type={"button"}
+                            miw={150}
+                            pointer
+                            rightSection={<Combobox.Chevron/>}
+                            rightSectionPointerEvents={"none"}
+                            onClick={() => granularityCombobox.toggleDropdown()}
+                        >
+                            {granularity || <Input.Placeholder>Select data granularity</Input.Placeholder>}
+                        </InputBase>
+                    </Combobox.Target>
+                    <Combobox.Dropdown>
+                        <Combobox.Options>
+                            <Combobox.Option value={"Auto"} key={"Auto"}>Auto</Combobox.Option>
+                            <Combobox.Option value={"Month"} key={"Month"}>Month</Combobox.Option>
+                            <Combobox.Option value={"Day"} key={"Day"}>Day</Combobox.Option>
+                            <Combobox.Option value={"Hour"} key={"Hour"}>Hour</Combobox.Option>
+                        </Combobox.Options>
+                    </Combobox.Dropdown>
+                </Combobox>
                 <DateTimePicker
                     label="Start"
-                    value={dayjs(start ?? seriesData.xAxis[0])}
-                    onChange={v => setStart(v?.toDate())}
-                    ampm={false}
+                    value={start ?? data[0]?.date ?? new Date()}
+                    onChange={v => setStart(v == null ? data[0]?.date ?? new Date() : new Date(v))}
+                    miw={150}
                 />
                 <DateTimePicker
                     label="End"
-                    value={dayjs(end)}
-                    onChange={v => setEnd(v?.toDate() ?? new Date())}
-                    ampm={false}
+                    value={end ?? new Date()}
+                    onChange={v => setEnd(v == null ? new Date() : new Date(v))}
+                    miw={150}
                 />
-            </Grid>
-        </Grid>
+            </Group>
+        </Stack>
     );
 }
