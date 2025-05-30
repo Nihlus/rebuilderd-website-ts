@@ -1,9 +1,10 @@
 import {useEffect, useMemo, useState} from "react";
 import RebuilderdAPI, {PackageRelease} from "./api/RebuilderdAPI.ts";
 import BuildFailureReason from "./BuildFailureReason.tsx";
-import {DataTable, type DataTableColumn} from "mantine-datatable";
+import {DataTable, type DataTableColumn, type DataTableSortStatus} from "mantine-datatable";
 import {IconCircleCheck, IconCircleX, IconProgress} from "@tabler/icons-react";
 import {Anchor, Container} from "@mantine/core";
+import sortBy from 'lodash/sortBy';
 
 /**
  * Represents the properties of the PackageTable component.
@@ -103,12 +104,22 @@ export function PackageTable({api, packages}: PackageTableProperties) {
     const [page, setPage] = useState(1);
     const [records, setRecords] = useState(packages?.slice(0, PAGE_SIZE) ?? []);
 
+    const [sortStatus, setSortStatus] = useState<DataTableSortStatus<PackageRelease>>({
+        columnAccessor: "name",
+        direction: "asc"
+    });
+
     useEffect(() => {
         const from = (page - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE;
 
-        setRecords(packages?.slice(from, to) ?? []);
-    }, [packages, page]);
+        let sorted = sortBy(packages, sortStatus.columnAccessor);
+        if (sortStatus.direction === "desc") {
+            sorted = sorted.reverse();
+        }
+
+        setRecords(sorted.slice(from, to));
+    }, [packages, page, sortStatus]);
 
     return (
         <DataTable
@@ -118,8 +129,13 @@ export function PackageTable({api, packages}: PackageTableProperties) {
             recordsPerPage={PAGE_SIZE}
             page={page}
             onPageChange={p => setPage(p)}
-            withTableBorder
             fetching={packages == null}
+            withColumnBorders
+            withTableBorder
+            striped
+            highlightOnHover
+            sortStatus={sortStatus}
+            onSortStatusChange={setSortStatus}
         />
     );
 }

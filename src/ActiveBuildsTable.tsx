@@ -1,8 +1,9 @@
 import {useEffect, useMemo, useState} from "react";
 import {ActiveBuild, DashboardState} from "./api/RebuilderdAPI.ts";
-import {DataTable, type DataTableColumn} from "mantine-datatable";
+import {DataTable, type DataTableColumn, type DataTableSortStatus} from "mantine-datatable";
 import {IconHammer} from "@tabler/icons-react";
 import {Container} from "@mantine/core";
+import sortBy from "lodash/sortBy";
 
 /**
  * Represents the properties of the ActiveBuildsTable component.
@@ -74,12 +75,22 @@ export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties)
     const [page, setPage] = useState(1);
     const [records, setRecords] = useState(dashboardState?.active_builds.slice(0, PAGE_SIZE) ?? []);
 
+    const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ActiveBuild>>({
+        columnAccessor: "name",
+        direction: "asc"
+    });
+
     useEffect(() => {
         const from = (page - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE;
 
-        setRecords(dashboardState?.active_builds.slice(from, to) ?? []);
-    }, [dashboardState?.active_builds, page]);
+        let sorted = sortBy(dashboardState?.active_builds, sortStatus.columnAccessor);
+        if (sortStatus.direction === "desc") {
+            sorted = sorted.reverse();
+        }
+
+        setRecords(sorted.slice(from, to));
+    }, [dashboardState?.active_builds, page, sortStatus]);
 
     return (
         <DataTable
@@ -94,6 +105,8 @@ export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties)
             page={page}
             onPageChange={p => setPage(p)}
             fetching={dashboardState == null}
+            sortStatus={sortStatus}
+            onSortStatusChange={setSortStatus}
         />
     );
 }
