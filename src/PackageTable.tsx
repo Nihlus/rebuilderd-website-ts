@@ -56,7 +56,8 @@ export function PackageTable({api, packages}: PackageTableProperties) {
         },
         {
             accessor: "name",
-            title: "Name", width: 150,
+            title: "Name",
+            minWidth: 150,
             resizable: true,
             sortable: true
         },
@@ -69,7 +70,7 @@ export function PackageTable({api, packages}: PackageTableProperties) {
         {
             accessor: "architecture",
             title: "Architecture",
-            width: 150,
+            minWidth: 150,
             resizable: true,
             sortable: true
         },

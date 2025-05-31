@@ -36,22 +36,27 @@ export function ActiveBuildsTable({dashboardState}: ActiveBuildsTableProperties)
         {
             accessor: "pkgbase.name",
             title: "Name",
-            width: 150,
+            minWidth: 150,
             resizable: true,
             sortable: true
         },
-        {accessor: "version", title: "Version"},
+        {
+            accessor: "version",
+            title: "Version",
+            resizable: true,
+            sortable: true
+        },
         {
             accessor: "pkgbase.architecture",
             title: "Architecture",
-            width: 150,
+            minWidth: 150,
             resizable: true,
             sortable: true
         },
         {
             accessor: "worker_id",
             headerName: "Worker",
-            width: 150,
+            minWidth: 150,
             resizable: true,
             sortable: true
         },
