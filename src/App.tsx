@@ -1,4 +1,4 @@
-import {createTheme, Divider, Flex, Grid, Group, MantineProvider, Space} from '@mantine/core'
+import {AppShell, Burger, createTheme, Divider, Group, Image, MantineProvider, Stack, Text} from '@mantine/core'
 import {useCallback, useEffect, useMemo, useState} from "react";
 import RebuilderdAPI, {DashboardState, PackageRelease} from "./api/RebuilderdAPI.ts";
 import * as config from "./config/config.json";
@@ -6,6 +6,7 @@ import {IconCircleCheck, IconCircleX, IconProgress} from "@tabler/icons-react";
 import {ActiveBuildsTable} from "./ActiveBuildsTable.tsx";
 import {PackageTable} from "./PackageTable.tsx";
 import {RebuildChart} from "./RebuildChart.tsx";
+import {useDisclosure} from "@mantine/hooks";
 
 /**
  * Holds the general application theme.
@@ -68,57 +69,93 @@ function App() {
         ? undefined
         : goodPackageCount! + badPackageCount! + unknownPackageCount!;
 
+    const [opened, {toggle}] = useDisclosure();
+
     return (
         <MantineProvider theme={theme} defaultColorScheme={"dark"}>
-            <Grid grow columns={2} ml={12} mr={12}>
-                <Grid.Col span={1} p={"2vh"} mah={"100vh"}>
-                    <Flex direction={"column"} h={"30%"}>
-                        <h1>Rebuilder statistics for debian/bookworm amd64</h1>
-                        <h2>
-                            Success rate breakdown
+            <AppShell
+                header={{
+                    height: 60
+                }}
+                navbar={{
+                    width: 300,
+                    breakpoint: 'sm',
+                    collapsed: {mobile: !opened}
+                }}
+                padding={"md"}
+            >
+                <AppShell.Header>
+                    <Burger opened={opened} onClick={toggle} hiddenFrom={"sm"} size={"sm"}/>
+                    <Group wrap={"nowrap"}>
+                        <Image
+                            src={"/rb-logo-only.svg"}
+                            w={"auto"}
+                            fit={"contain"}
+                            h={"calc(var(--app-shell-header-height, 0px))"}
+                            p={10}
+                        />
+                        <Text size={"xl"} fw={700}>Rebuilderd statistics</Text>
+                    </Group>
+                </AppShell.Header>
+
+                <AppShell.Navbar p={"md"}>
+                    bookworm/amd64
+                </AppShell.Navbar>
+
+                <AppShell.Main>
+                    <Group
+                        grow
+                        h="calc(100vh - var(--app-shell-header-height, 0px) - var(--app-shell-footer-height, 0px) - var(--mantine-spacing-xl))"
+                    >
+                        <Stack justify={"flex-start"} h={"100%"}>
+                            <div>
+                                <h2>
+                                    Success rate breakdown
+                                    <Divider orientation="horizontal"/>
+                                </h2>
+                                <Group wrap={"nowrap"}>
+                                    <IconCircleCheck color="var(--mantine-color-green-outline)"/>
+                                    {formatPercentage(goodPackageCount, totalPackages)} of all packages have been
+                                    bit-for-bit
+                                    reproduced
+                                </Group>
+                                <Group wrap={"nowrap"}>
+                                    <IconCircleX color="var(--mantine-color-orange-filled)"/>
+                                    {formatPercentage(badPackageCount, packages?.length)} of all packages have been
+                                    attempted
+                                    but failed
+                                </Group>
+                                <Group wrap={"nowrap"}>
+                                    <IconProgress color="var(--mantine-color-yellow-outline)"/>
+                                    {formatPercentage(unknownPackageCount, packages?.length)} of all packages haven't
+                                    been
+                                    attempted yet
+                                </Group>
+                            </div>
+
+                            <div>
+                                <h2>
+                                    Queue
+                                    <Divider orientation="horizontal"/>
+                                </h2>
+                                {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working
+                                hard on the following packages.
+                            </div>
+
                             <Divider orientation="horizontal"/>
-                        </h2>
-                        <Group>
-                            <IconCircleCheck color="var(--mantine-color-green-outline)"/>
-                            {formatPercentage(goodPackageCount, totalPackages)} of all packages have been bit-for-bit
-                            reproduced
-                        </Group>
-                        <Group>
-                            <IconCircleX color="var(--mantine-color-orange-filled)"/>
-                            {formatPercentage(badPackageCount, packages?.length)} of all packages have been attempted
-                            but failed
-                        </Group>
-                        <Group>
-                            <IconProgress color="var(--mantine-color-yellow-outline)"/>
-                            {formatPercentage(unknownPackageCount, packages?.length)} of all packages haven't been
-                            attempted yet
-                        </Group>
-                        <h2>
-                            Queue
+
+                            <ActiveBuildsTable dashboardState={dashboardState}/>
+                        </Stack>
+                        <Stack justify={"flex-start"} h={"100%"}>
+                            <RebuildChart api={api} packages={packages}/>
+
                             <Divider orientation="horizontal"/>
-                        </h2>
-                        {dashboardState?.active_builds.length ?? "An unknown number of "} workers are working
-                        hard on the following packages.
-                    </Flex>
-                    <Space h={"xl"}/>
-                    <Divider orientation="horizontal"/>
-                    <Space h={"xl"}/>
-                    <Flex direction={"column"} h={"60%"}>
-                        <ActiveBuildsTable dashboardState={dashboardState}/>
-                    </Flex>
-                </Grid.Col>
-                <Grid.Col span={1} p={"2vh"} mah={"100vh"}>
-                    <Flex direction={"column"} h={"30%"}>
-                        <RebuildChart api={api} packages={packages}/>
-                    </Flex>
-                    <Space h={"xl"}/>
-                    <Divider orientation="horizontal"/>
-                    <Space h={"xl"}/>
-                    <Flex direction={"column"} h={"60%"}>
-                        <PackageTable api={api} packages={packages}/>
-                    </Flex>
-                </Grid.Col>
-            </Grid>
+
+                            <PackageTable api={api} packages={packages}/>
+                        </Stack>
+                    </Group>
+                </AppShell.Main>
+            </AppShell>
         </MantineProvider>
     );
 }
